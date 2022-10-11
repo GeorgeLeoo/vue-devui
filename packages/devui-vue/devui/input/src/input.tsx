@@ -1,4 +1,4 @@
-import { defineComponent, watch, inject, toRefs, shallowRef, ref, computed, getCurrentInstance } from 'vue';
+import { defineComponent, watch, inject, toRefs, shallowRef, ref, computed, getCurrentInstance, onMounted } from 'vue';
 import type { SetupContext } from 'vue';
 import Icon from '../../icon/src/icon';
 import { inputProps, InputProps } from './input-types';
@@ -20,12 +20,23 @@ export default defineComponent({
     const t = createI18nTranslate('DInput', app);
 
     const formItemContext = inject(FORM_ITEM_TOKEN, undefined) as FormItemContext;
-    const { modelValue } = toRefs(props);
+    const { modelValue, labelInput } = toRefs(props);
     const ns = useNamespace('input');
     const slotNs = useNamespace('input-slot');
-    const { inputDisabled, inputSize, isFocus, wrapClasses, inputClasses, customStyle, otherAttrs } = useInputRender(props, ctx);
+    const {
+      inputDisabled,
+      inputSize,
+      isFocus,
+      wrapClasses,
+      inputClasses,
+      customStyle,
+      otherAttrs,
+      labelClassName,
+    } = useInputRender(props, ctx);
 
     const input = shallowRef<HTMLInputElement>();
+    const prefix = shallowRef<HTMLInputElement>();
+
     const { select, focus, blur } = useInputFunction(input);
 
     const { onFocus, onBlur, onInput, onChange, onKeydown, onClear } = useInputEvent(isFocus, props, ctx, focus);
@@ -44,6 +55,15 @@ export default defineComponent({
       return props.clearable && !inputDisabled.value && modelValue.value?.length > 0;
     });
 
+    const inputId = ns.e('input') + '-' + app?.uid;
+
+    const labelStyle = computed(() => {
+      const refPrefix = computed(() => prefix.value);
+      return {
+        left: `${refPrefix.value?.offsetWidth}px` || 0
+      };
+    });
+
     watch(
       () => props.modelValue,
       () => {
@@ -60,17 +80,19 @@ export default defineComponent({
         {ctx.slots.prepend && <div class={slotNs.e('prepend')}>{ctx.slots.prepend?.()}</div>}
         <div class={wrapClasses.value}>
           {prefixVisible && (
-            <span class={slotNs.e('prefix')}>
+            <span ref={prefix} class={slotNs.e('prefix')}>
               {ctx.slots.prefix && ctx.slots.prefix?.()}
               {props.prefix && <Icon size={inputSize.value} name={props.prefix} />}
             </span>
           )}
+          <label for={inputId}class={labelClassName.value}style={labelStyle.value}>{props.placeholder || t('placeholder')}</label>
           <input
             ref={input}
+            id={inputId}
             value={modelValue.value}
             disabled={inputDisabled.value}
             class={ns.e('inner')}
-            placeholder={props.placeholder || t('placeholder')}
+            placeholder={labelInput ? '' : props.placeholder || t('placeholder')}
             {...otherAttrs}
             type={props.showPassword ? (passwordVisible.value ? 'text' : 'password') : 'text'}
             onInput={onInput}

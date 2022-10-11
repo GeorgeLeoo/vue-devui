@@ -42,6 +42,10 @@ export const inputProps = {
     type: String,
     default: '',
   },
+  labelInput: {
+    type: String,
+    default: '',
+  },
 } as const;
 
 export type InputProps = ExtractPropTypes<typeof inputProps>;
@@ -54,6 +58,7 @@ export interface UseInputRender {
   inputClasses: ComputedRef<Record<string, boolean | undefined>>;
   customStyle: Record<string, unknown>;
   otherAttrs: Record<string, unknown>;
+  labelClassName: ComputedRef<Record<string, boolean | undefined>>;
 }
 
 export interface UseInputEvent {
